@@ -1,0 +1,78 @@
+//  Copyright 2014 J.C. Moyer
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+#include <StormLib.h>
+
+extern "C" {
+  #include <lua.h>
+  #include <lualib.h>
+  #include <lauxlib.h>
+}
+
+#include "file_handle.h"
+#include "mpq_handle.h"
+
+// moonstorm.open(filename, [flags=0])
+int moonstorm_open(lua_State* L) {
+  const char* filename = luaL_checkstring(L, 1);
+  DWORD flags = luaL_optint(L, 2, 0);
+  HANDLE mpq_handle;
+
+  if (SFileOpenArchive(filename, 0, flags, &mpq_handle)) {
+    moonstorm_newmpqhandle(L, mpq_handle);
+    return 1;
+  } else {
+    luaL_error(L, "could not open archive");
+    return 0;
+  }
+}
+
+// moonstorm.create(filename, [flags=0,] max_file_count)
+int moonstorm_create(lua_State* L) {
+  const char* filename = luaL_checkstring(L, 1);
+  DWORD flags, max_file_count;
+  HANDLE mpq_handle;
+
+  if (lua_gettop(L) <= 2) {
+    max_file_count = luaL_checkint(L, 2);
+  } else {
+    flags = luaL_checkint(L, 2);
+    max_file_count = luaL_checkint(L, 3);
+  }
+
+  if (SFileCreateArchive(filename, flags, max_file_count, &mpq_handle)) {
+    moonstorm_newmpqhandle(L, mpq_handle);
+    return 1;
+  } else {
+    luaL_error(L, "could not create archive");
+    return 0;
+  }
+}
+
+static const struct luaL_Reg moonstorm_lib[] = {
+  {"open", moonstorm_open},
+  {"create", moonstorm_create},
+  {NULL, NULL}
+};
+
+// C linkage required for lua to see this function
+extern "C" int luaopen_moonstorm(lua_State* L) {
+  moonstorm_init_mpqhandle(L);
+  moonstorm_init_filehandle(L);
+
+  lua_newtable(L);
+  luaL_setfuncs(L, moonstorm_lib, 0);
+
+  return 1;
+}

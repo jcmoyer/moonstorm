@@ -103,12 +103,61 @@ int moonstorm_mpq_hasfile(lua_State* L) {
   return 1;
 }
 
+// docs say this takes LARGE_INTEGER* but source code says ULONGLONG
+void WINAPI moonstorm_mpq_compact_cb(void* userdata, DWORD worktype,
+  ULONGLONG processed, ULONGLONG total) {
+  lua_State* L = static_cast<lua_State*>(userdata);
+
+  // dup function
+  lua_pushvalue(L, -1);
+
+  lua_pushinteger(L, worktype);
+  lua_pushinteger(L, processed);
+  lua_pushinteger(L, total);
+
+  int result = lua_pcall(L, 3, 0, 0);
+  if (result != LUA_OK) {
+    // TODO: better way to handle errors instead of swallowing them?
+    lua_pop(L, 1);
+  }
+}
+
+// mpq:compact([listfile,] [callback])
+int moonstorm_mpq_compact(lua_State* L) {
+  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
+  const char* listfile = NULL;
+  int func = 0;
+
+  if (lua_isstring(L, 2)) {
+    listfile = lua_tostring(L, 2);
+  } else if (lua_isfunction(L, 2)) {
+    func = 2;
+  }
+  // if #2 is a string, try #3 for a function
+  if (func == 0 && listfile && lua_isfunction(L, 3)) {
+    func = 3;
+  }
+
+  if (func > 0) {
+    // func is already on top of the stack so we'll just take it from there in
+    // the callback
+    SFileSetCompactCallback(*h, moonstorm_mpq_compact_cb, static_cast<void*>(L));
+  }
+
+  if (SFileCompactArchive(*h, listfile, false)) {
+    return 0;
+  } else {
+    return moonstorm_push_last_err(L);
+  }
+}
+
 static const struct luaL_Reg mpqhandle_lib[] = {
   {"openfile", moonstorm_mpq_openfile},
   {"createfile", moonstorm_mpq_createfile},
   {"flush", moonstorm_mpq_flush},
   {"close", moonstorm_mpq_close},
   {"hasfile", moonstorm_mpq_hasfile},
+  {"compact", moonstorm_mpq_compact},
   {NULL, NULL}
 };
 

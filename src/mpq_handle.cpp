@@ -54,7 +54,7 @@ int moonstorm_mpq_openfile(lua_State* L) {
 }
 
 // mpq:create(filename, filesize, flags)
-int moonstorm_mpq_create(lua_State* L) {
+int moonstorm_mpq_createfile(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
   ULONGLONG filetime = 0;
@@ -105,7 +105,7 @@ int moonstorm_mpq_hasfile(lua_State* L) {
 
 static const struct luaL_Reg mpqhandle_lib[] = {
   {"openfile", moonstorm_mpq_openfile},
-  {"createfile", moonstorm_mpq_create},
+  {"createfile", moonstorm_mpq_createfile},
   {"flush", moonstorm_mpq_flush},
   {"close", moonstorm_mpq_close},
   {"hasfile", moonstorm_mpq_hasfile},

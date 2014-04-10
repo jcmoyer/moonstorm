@@ -71,7 +71,7 @@ int moonstorm_mpq_file_seek(lua_State* L) {
   const char* whence = luaL_optstring(L, 2, "cur");
   lua_Integer offset = luaL_optinteger(L, 3, 0);
 
-  LONG high, low;
+  DWORD high, low;
   extract_long_lua_int(offset, high, low);
 
   // convert to stormlib move method
@@ -84,7 +84,7 @@ int moonstorm_mpq_file_seek(lua_State* L) {
     method = FILE_END;
   }
 
-  low = SFileSetFilePointer(*h, low, &high, method);
+  low = SFileSetFilePointer(*h, low, (LONG*)&high, method);
   if (low != SFILE_INVALID_SIZE) {
     lua_pushinteger(L, make_long_lua_int(high, low));
     return 1;

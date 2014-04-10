@@ -38,6 +38,21 @@ HANDLE* moonstorm_checkmpqhandle(lua_State* L, int arg) {
   return static_cast<HANDLE*>(luaL_checkudata(L, arg, MPQHANDLE_UDNAME));
 }
 
+// mpq:addlistfile(filename)
+int moonstorm_mpq_addlistfile(lua_State* L) {
+  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
+  const char* filename = luaL_checkstring(L, 2);
+  int result = SFileAddListFile(*h, filename);
+  if (result == ERROR_SUCCESS) {
+    lua_pushboolean(L, true);
+    return 1;
+  } else {
+    lua_pushnil(L);
+    lua_pushinteger(L, result);
+    return 2;
+  }
+}
+
 // mpq:openfile(filename [, search_scope=0])
 int moonstorm_mpq_openfile(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
@@ -152,6 +167,7 @@ int moonstorm_mpq_compact(lua_State* L) {
 }
 
 static const struct luaL_Reg mpqhandle_lib[] = {
+  {"addlistfile", moonstorm_mpq_addlistfile},
   {"openfile", moonstorm_mpq_openfile},
   {"createfile", moonstorm_mpq_createfile},
   {"flush", moonstorm_mpq_flush},

@@ -38,6 +38,7 @@ HANDLE* moonstorm_checkmpqhandle(lua_State* L, int arg) {
   return static_cast<HANDLE*>(luaL_checkudata(L, arg, MPQHANDLE_UDNAME));
 }
 
+// mpq:openfile(filename [, search_scope=0])
 int moonstorm_mpq_openfile(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
@@ -52,6 +53,7 @@ int moonstorm_mpq_openfile(lua_State* L) {
   }
 }
 
+// mpq:create(filename, filesize, flags)
 int moonstorm_mpq_create(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
@@ -69,6 +71,7 @@ int moonstorm_mpq_create(lua_State* L) {
   }
 }
 
+// mpq:flush()
 int moonstorm_mpq_flush(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
   if (!SFileFlushArchive(*h)) {
@@ -77,6 +80,7 @@ int moonstorm_mpq_flush(lua_State* L) {
   return 0;
 }
 
+// mpq:close()
 int moonstorm_mpq_close(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
   if (!SFileCloseArchive(*h)) {
@@ -85,6 +89,7 @@ int moonstorm_mpq_close(lua_State* L) {
   return 0;
 }
 
+// mpq:hasfile(filename)
 int moonstorm_mpq_hasfile(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);

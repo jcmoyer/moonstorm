@@ -51,6 +51,7 @@ int moonstorm_mpq_file_size_at(lua_State* L, int handle) {
   lua_pop(L, 2);
 }
 
+// file:size()
 int moonstorm_mpq_file_size(lua_State* L) {
   HANDLE* h = moonstorm_checkfilehandle(L, 1);
   DWORD high, low;
@@ -92,6 +93,7 @@ int moonstorm_mpq_file_seek(lua_State* L) {
   }
 }
 
+// file:name()
 int moonstorm_mpq_file_name(lua_State* L) {
   HANDLE* h = moonstorm_checkfilehandle(L, 1);
   char filename[MAX_PATH];
@@ -104,6 +106,7 @@ int moonstorm_mpq_file_name(lua_State* L) {
   }
 }
 
+// file:read([n])
 int moonstorm_mpq_file_read(lua_State* L) {
   HANDLE* h = moonstorm_checkfilehandle(L, 1);
   int bufsize;
@@ -134,6 +137,7 @@ int moonstorm_mpq_file_read(lua_State* L) {
   }
 }
 
+// file:write(s)
 int moonstorm_mpq_file_write(lua_State* L) {
   HANDLE* h = moonstorm_checkfilehandle(L, 1);
   const char* s = luaL_checkstring(L, 2);
@@ -149,6 +153,7 @@ int moonstorm_mpq_file_write(lua_State* L) {
   }
 }
 
+// file:close()
 int moonstorm_mpq_file_close(lua_State* L) {
   HANDLE* h = moonstorm_checkfilehandle(L, 1);
   if (!SFileCloseFile(*h)) {

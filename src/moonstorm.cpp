@@ -22,6 +22,7 @@ extern "C" {
 
 #include "file_handle.h"
 #include "mpq_handle.h"
+#include "common.h"
 
 // moonstorm.open(filename, [flags=0])
 int moonstorm_open(lua_State* L) {
@@ -33,8 +34,7 @@ int moonstorm_open(lua_State* L) {
     moonstorm_newmpqhandle(L, mpq_handle);
     return 1;
   } else {
-    luaL_error(L, "could not open archive");
-    return 0;
+    return moonstorm_push_last_err(L);
   }
 }
 
@@ -55,8 +55,7 @@ int moonstorm_create(lua_State* L) {
     moonstorm_newmpqhandle(L, mpq_handle);
     return 1;
   } else {
-    luaL_error(L, "could not create archive");
-    return 0;
+    return moonstorm_push_last_err(L);
   }
 }
 

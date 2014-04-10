@@ -49,6 +49,7 @@ int moonstorm_mpq_file_size_at(lua_State* L, int handle) {
   }
   size = lua_tointeger(L, -1);
   lua_pop(L, 2);
+  return size;
 }
 
 // file:size()

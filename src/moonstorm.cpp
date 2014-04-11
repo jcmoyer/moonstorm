@@ -59,9 +59,25 @@ int moonstorm_create(lua_State* L) {
   }
 }
 
+// moonstorm.setlocale(lcid)
+int moonstorm_setlocale(lua_State* L) {
+  LCID lcid = luaL_checkinteger(L, 1);
+  lua_pushinteger(L, SFileSetLocale(lcid));
+  return 1;
+}
+
+// moonstorm.getlocale()
+int moonstorm_getlocale(lua_State* L) {
+  LCID lcid = SFileGetLocale();
+  lua_pushinteger(L, lcid);
+  return 1;
+}
+
 static const struct luaL_Reg moonstorm_lib[] = {
   {"open", moonstorm_open},
   {"create", moonstorm_create},
+  {"setlocale", moonstorm_setlocale},
+  {"getlocale", moonstorm_getlocale},
   {NULL, NULL}
 };
 

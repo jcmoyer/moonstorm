@@ -147,7 +147,7 @@ void WINAPI moonstorm_mpq_compact_cb(void* userdata, DWORD worktype,
   }
 }
 
-// mpq:compact([listfile,] [callback])
+// mpq:compact([listfile] [, callback])
 int moonstorm_mpq_compact(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
   const char* listfile = NULL;

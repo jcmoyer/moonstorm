@@ -118,6 +118,16 @@ int moonstorm_mpq_hasfile(lua_State* L) {
   return 1;
 }
 
+// mpq:setmaxfilecount(n)
+int moonstorm_mpq_setmaxfilecount(lua_State* L) {
+  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
+  DWORD maxfilecount = luaL_checkint(L, 2);
+  if (!SFileSetMaxFileCount(*h, maxfilecount)) {
+    return moonstorm_push_last_err(L);
+  }
+  return 0;
+}
+
 // docs say this takes LARGE_INTEGER* but source code says ULONGLONG
 void WINAPI moonstorm_mpq_compact_cb(void* userdata, DWORD worktype,
   ULONGLONG processed, ULONGLONG total) {
@@ -173,6 +183,7 @@ static const struct luaL_Reg mpqhandle_lib[] = {
   {"flush", moonstorm_mpq_flush},
   {"close", moonstorm_mpq_close},
   {"hasfile", moonstorm_mpq_hasfile},
+  {"setmaxfilecount", moonstorm_mpq_setmaxfilecount},
   {"compact", moonstorm_mpq_compact},
   {NULL, NULL}
 };

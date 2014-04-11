@@ -157,10 +157,12 @@ int moonstorm_mpq_file_write(lua_State* L) {
 // file:close()
 int moonstorm_mpq_file_close(lua_State* L) {
   HANDLE* h = moonstorm_checkfilehandle(L, 1);
-  if (!SFileCloseFile(*h)) {
+  if (SFileCloseFile(*h)) {
+    lua_pushboolean(L, true);
+    return 1;
+  } else {
     return moonstorm_push_last_err(L);
   }
-  return 0;
 }
 
 static const struct luaL_Reg mpqfilehandle_lib[] = {

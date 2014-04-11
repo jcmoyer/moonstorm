@@ -89,19 +89,23 @@ int moonstorm_mpq_createfile(lua_State* L) {
 // mpq:flush()
 int moonstorm_mpq_flush(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
-  if (!SFileFlushArchive(*h)) {
+  if (SFileFlushArchive(*h)) {
+    lua_pushboolean(L, true);
+    return 1;
+  } else {
     return moonstorm_push_last_err(L);
   }
-  return 0;
 }
 
 // mpq:close()
 int moonstorm_mpq_close(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
-  if (!SFileCloseArchive(*h)) {
+  if (SFileCloseArchive(*h)) {
+    lua_pushboolean(L, true);
+    return 1;
+  } else {
     return moonstorm_push_last_err(L);
   }
-  return 0;
 }
 
 // mpq:hasfile(filename)
@@ -122,10 +126,12 @@ int moonstorm_mpq_hasfile(lua_State* L) {
 int moonstorm_mpq_setmaxfilecount(lua_State* L) {
   HANDLE* h = moonstorm_checkmpqhandle(L, 1);
   DWORD maxfilecount = luaL_checkint(L, 2);
-  if (!SFileSetMaxFileCount(*h, maxfilecount)) {
+  if (SFileSetMaxFileCount(*h, maxfilecount)) {
+    lua_pushboolean(L, true);
+    return 1;
+  } else {
     return moonstorm_push_last_err(L);
   }
-  return 0;
 }
 
 // docs say this takes LARGE_INTEGER* but source code says ULONGLONG
@@ -170,7 +176,8 @@ int moonstorm_mpq_compact(lua_State* L) {
   }
 
   if (SFileCompactArchive(*h, listfile, false)) {
-    return 0;
+    lua_pushboolean(L, true);
+    return 1;
   } else {
     return moonstorm_push_last_err(L);
   }

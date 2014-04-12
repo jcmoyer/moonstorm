@@ -18,8 +18,14 @@
 #include <StormLib.h>
 #include <lua.h>
 
-lua_Integer make_long_lua_int(DWORD high, DWORD low);
-void extract_long_lua_int(lua_Integer i, DWORD* high, DWORD* low);
+static inline lua_Integer make_long_lua_int(DWORD high, DWORD low) {
+  return (((lua_Integer)high) << 32) | (lua_Integer)low;
+}
+
+static inline void extract_long_lua_int(lua_Integer i, DWORD* high, DWORD* low) {
+  *high = (i >> 32) & 0xFFFFFFFF;
+  *low = i & 0xFFFFFFFF;
+}
 
 const char* storm_errstr(DWORD e, char* buffer, DWORD size);
 void moonstorm_push_errstr(lua_State* L, DWORD e);

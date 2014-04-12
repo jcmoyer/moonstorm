@@ -18,6 +18,15 @@
 #include <windows.h>
 #endif
 
+lua_Integer make_long_lua_int(DWORD high, DWORD low) {
+  return (((lua_Integer)high) << 32) | (lua_Integer)low;
+}
+
+void extract_long_lua_int(lua_Integer i, DWORD* high, DWORD* low) {
+  *high = (i >> 32) & 0xFFFFFFFF;
+  *low = i & 0xFFFFFFFF;
+}
+
 const char* storm_errstr(DWORD e, char* buffer, DWORD size) {
 #ifdef _WIN32
   FormatMessage(

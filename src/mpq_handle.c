@@ -13,13 +13,9 @@
 //  limitations under the License.
 
 #include <StormLib.h>
-
-extern "C" {
-  #include <lua.h>
-  #include <lualib.h>
-  #include <lauxlib.h>
-}
-
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 #include "common.h"
 #include "file_handle.h"
 
@@ -28,14 +24,14 @@ const char* MPQHANDLE_UDNAME = "mpqhandle";
 
 // converts a HANDLE to an mpqhandle userdata and pushes it onto the stack
 void moonstorm_newmpqhandle(lua_State* L, HANDLE h) {
-  HANDLE* udhandle = static_cast<HANDLE*>(lua_newuserdata(L, sizeof(HANDLE)));
+  HANDLE* udhandle = (HANDLE*)(lua_newuserdata(L, sizeof(HANDLE)));
   *udhandle = h;
   luaL_setmetatable(L, MPQHANDLE_UDNAME);
 }
 
 // ensures that the value on top of the stack is a mpqhandle userdata
 HANDLE* moonstorm_checkmpqhandle(lua_State* L, int arg) {
-  return static_cast<HANDLE*>(luaL_checkudata(L, arg, MPQHANDLE_UDNAME));
+  return (HANDLE*)(luaL_checkudata(L, arg, MPQHANDLE_UDNAME));
 }
 
 // mpq:addlistfile(filename)
@@ -137,7 +133,7 @@ int moonstorm_mpq_setmaxfilecount(lua_State* L) {
 // docs say this takes LARGE_INTEGER* but source code says ULONGLONG
 void WINAPI moonstorm_mpq_compact_cb(void* userdata, DWORD worktype,
   ULONGLONG processed, ULONGLONG total) {
-  lua_State* L = static_cast<lua_State*>(userdata);
+  lua_State* L = (lua_State*)(userdata);
 
   // dup function
   lua_pushvalue(L, -1);
@@ -172,7 +168,7 @@ int moonstorm_mpq_compact(lua_State* L) {
   if (func > 0) {
     // func is already on top of the stack so we'll just take it from there in
     // the callback
-    SFileSetCompactCallback(*h, moonstorm_mpq_compact_cb, static_cast<void*>(L));
+    SFileSetCompactCallback(*h, moonstorm_mpq_compact_cb, (void*)(L));
   }
 
   if (SFileCompactArchive(*h, listfile, false)) {

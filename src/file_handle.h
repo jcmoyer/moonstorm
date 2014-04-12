@@ -15,6 +15,9 @@
 #ifndef FILE_HANDLE_H
 #define FILE_HANDLE_H
 
+#include <StormLib.h>
+#include <lua.h>
+
 void moonstorm_newfilehandle(lua_State* L, HANDLE h);
 int moonstorm_mpq_file_size(lua_State* L);
 int moonstorm_mpq_file_name(lua_State* L);

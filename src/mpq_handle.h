@@ -15,6 +15,9 @@
 #ifndef MPQ_HANDLE_H
 #define MPQ_HANDLE_H
 
+#include <StormLib.h>
+#include <lua.h>
+
 void moonstorm_newmpqhandle(lua_State* L, HANDLE h);
 HANDLE* moonstorm_checkmpqhandle(lua_State* L, int arg);
 

@@ -13,13 +13,9 @@
 //  limitations under the License.
 
 #include <StormLib.h>
-
-extern "C" {
-  #include <lua.h>
-  #include <lualib.h>
-  #include <lauxlib.h>
-}
-
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 #include "file_handle.h"
 #include "mpq_handle.h"
 #include "common.h"
@@ -82,7 +78,7 @@ static const struct luaL_Reg moonstorm_lib[] = {
 };
 
 // C linkage required for lua to see this function
-extern "C" int luaopen_moonstorm(lua_State* L) {
+int luaopen_moonstorm(lua_State* L) {
   moonstorm_init_mpqhandle(L);
   moonstorm_init_filehandle(L);
 

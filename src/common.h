@@ -16,23 +16,12 @@
 #define COMMON_H
 
 #include <StormLib.h>
+#include <lua.h>
 
-extern "C" {
-  #include <lua.h>
-}
+lua_Integer make_long_lua_int(DWORD high, DWORD low);
+void extract_long_lua_int(lua_Integer i, DWORD* high, DWORD* low);
 
-template <typename T>
-inline lua_Integer make_long_lua_int(T high, T low) {
-  return (((lua_Integer)high) << 32) | (lua_Integer)low;
-}
-
-template <typename T>
-inline void extract_long_lua_int(lua_Integer i, T& high, T& low) {
-  low  = i & 0xFFFFFFFF;
-  high = (i >> 32) & 0xFFFFFFFF;
-}
-
-const char* storm_errstr(DWORD e);
+const char* storm_errstr(DWORD e, char* buffer, DWORD size);
 void moonstorm_push_errstr(lua_State* L, DWORD e);
 int moonstorm_push_last_err(lua_State* L);
 

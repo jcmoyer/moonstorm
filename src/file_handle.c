@@ -13,13 +13,9 @@
 //  limitations under the License.
 
 #include <StormLib.h>
-
-extern "C" {
-  #include <lua.h>
-  #include <lualib.h>
-  #include <lauxlib.h>
-}
-
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
 #include "file_handle.h"
 #include "common.h"
 
@@ -27,14 +23,14 @@ extern "C" {
 const char* FILEHANDLE_UDNAME = "mpqfilehandle";
 
 void moonstorm_newfilehandle(lua_State* L, HANDLE h) {
-  HANDLE* udhandle = static_cast<HANDLE*>(lua_newuserdata(L, sizeof(HANDLE)));
+  HANDLE* udhandle = (HANDLE*)(lua_newuserdata(L, sizeof(HANDLE)));
   *udhandle = h;
   luaL_setmetatable(L, FILEHANDLE_UDNAME);
 }
 
 // ensures that the value on top of the stack is a file handle userdata
 HANDLE* moonstorm_checkfilehandle(lua_State* L, int arg) {
-  return static_cast<HANDLE*>(luaL_checkudata(L, arg, FILEHANDLE_UDNAME));
+  return (HANDLE*)(luaL_checkudata(L, arg, FILEHANDLE_UDNAME));
 }
 
 // helper function that calls moonstorm_mpq_file_size on a handle that isn't
@@ -73,7 +69,7 @@ int moonstorm_mpq_file_seek(lua_State* L) {
   lua_Integer offset = luaL_optinteger(L, 3, 0);
 
   DWORD high, low;
-  extract_long_lua_int(offset, high, low);
+  extract_long_lua_int(offset, &high, &low);
 
   // convert to stormlib move method
   DWORD method;
@@ -130,7 +126,7 @@ int moonstorm_mpq_file_read(lua_State* L) {
   char* dst = luaL_buffinitsize(L, &buf, bufsize);
   DWORD nread;
   
-  if (SFileReadFile(*h, static_cast<void*>(dst), bufsize, &nread, NULL)) {
+  if (SFileReadFile(*h, (void*)(dst), bufsize, &nread, NULL)) {
     luaL_pushresultsize(&buf, nread);
     return 1;
   } else {
@@ -146,7 +142,7 @@ int moonstorm_mpq_file_write(lua_State* L) {
 
   lua_Integer sz = luaL_len(L, 2);
   
-  if (SFileWriteFile(*h, static_cast<const void*>(s), sz, comp)) {
+  if (SFileWriteFile(*h, (const void*)(s), sz, comp)) {
     lua_pushvalue(L, 1);
     return 1;
   } else {

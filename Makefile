@@ -12,9 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-CPP     = g++
-CFLAGS  = -Wall
-LFLAGS  = -llua53 -lStormLib -shared
+CC     = gcc
+LFLAGS = -llua53 -lStormLib -shared
+override CFLAGS += -Wall -Wextra -std=c99
 
 ifeq ($(OS),Windows_NT)
 	LIBRARY = moonstorm.dll
@@ -26,11 +26,11 @@ OBJ = src/common.o src/file_handle.o src/mpq_handle.o src/moonstorm.o
 
 all: $(LIBRARY)
 
-$(OBJ): %.o: %.cpp
-	$(CPP) -o $@ $(CFLAGS) -c $<
+$(OBJ): %.o: %.c
+	$(CC) -o $@ $(CFLAGS) -c $<
 
 $(LIBRARY): $(OBJ)
-	$(CPP) $(CFLAGS) -o $(LIBRARY) $(OBJ) $(LFLAGS)
+	$(CC) $(CFLAGS) -o $(LIBRARY) $(OBJ) $(LFLAGS)
 
 clean:
 	rm -f $(LIBRARY)

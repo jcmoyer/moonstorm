@@ -9,9 +9,10 @@ typedef enum {
   msh_closed
 } ms_handle_stat;
 
-typedef struct {
-  HANDLE         handle;
-  ms_handle_stat status;
+typedef struct ms_handle {
+  HANDLE            handle;
+  ms_handle_stat    status;
+  struct ms_handle* parent;
 } ms_handle;
 
 // converts a HANDLE to an ms_handle and pushes it onto the stack as a full

@@ -20,7 +20,7 @@
 #include "file_handle.h"
 
 // name of the mpqhandle metatable
-const char* MPQHANDLE_UDNAME = "mpqhandle";
+static const char* MPQHANDLE_UDNAME = "mpqhandle";
 
 // converts a HANDLE to an mpqhandle userdata and pushes it onto the stack
 void moonstorm_newmpqhandle(lua_State* L, HANDLE h) {

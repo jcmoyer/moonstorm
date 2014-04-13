@@ -20,7 +20,7 @@
 #include "common.h"
 
 // name of the file handle (obtained through an MPQ file) metatable
-const char* FILEHANDLE_UDNAME = "mpqfilehandle";
+static const char* FILEHANDLE_UDNAME = "mpqfilehandle";
 
 void moonstorm_newfilehandle(lua_State* L, HANDLE h) {
   HANDLE* udhandle = (HANDLE*)(lua_newuserdata(L, sizeof(HANDLE)));

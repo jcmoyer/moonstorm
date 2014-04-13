@@ -22,7 +22,7 @@ else
 	LIBRARY = libmoonstorm.so
 endif
 
-OBJ = src/common.o src/file_handle.o src/mpq_handle.o src/moonstorm.o
+OBJ = src/common.o src/msio.o src/file_handle.o src/mpq_handle.o src/moonstorm.o
 
 all: $(LIBRARY)
 

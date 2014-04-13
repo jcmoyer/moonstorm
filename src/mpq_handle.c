@@ -18,27 +18,29 @@
 #include <lauxlib.h>
 #include "common.h"
 #include "file_handle.h"
+#include "msio.h"
 
 // name of the mpqhandle metatable
 static const char* MPQHANDLE_UDNAME = "mpqhandle";
 
 // converts a HANDLE to an mpqhandle userdata and pushes it onto the stack
 void moonstorm_newmpqhandle(lua_State* L, HANDLE h) {
-  HANDLE* udhandle = lua_newuserdata(L, sizeof(HANDLE));
-  *udhandle = h;
+  ms_newhandle(L, h);
   luaL_setmetatable(L, MPQHANDLE_UDNAME);
 }
 
-// ensures that the value on top of the stack is a mpqhandle userdata
-HANDLE* moonstorm_checkmpqhandle(lua_State* L, int arg) {
-  return luaL_checkudata(L, arg, MPQHANDLE_UDNAME);
+ms_handle* moonstorm_checkmpqhandle(lua_State* L, int arg) {
+  // ensure proper metatable
+  luaL_checkudata(L, arg, MPQHANDLE_UDNAME);
+  // ensure handle is valid
+  return ms_checkhandle(L, arg);
 }
 
 // mpq:addlistfile(filename)
 int moonstorm_mpq_addlistfile(lua_State* L) {
-  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
+  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
-  int result = SFileAddListFile(*h, filename);
+  int result = SFileAddListFile(h->handle, filename);
   if (result == ERROR_SUCCESS) {
     lua_pushboolean(L, true);
     return 1;
@@ -51,12 +53,12 @@ int moonstorm_mpq_addlistfile(lua_State* L) {
 
 // mpq:openfile(filename [, search_scope=0])
 int moonstorm_mpq_openfile(lua_State* L) {
-  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
+  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
   DWORD search_scope = luaL_optint(L, 3, 0);
   HANDLE file_handle;
 
-  if (SFileOpenFileEx(*h, filename, search_scope, &file_handle)) {
+  if (SFileOpenFileEx(h->handle, filename, search_scope, &file_handle)) {
     moonstorm_newfilehandle(L, file_handle);
     return 1;
   } else {
@@ -66,7 +68,7 @@ int moonstorm_mpq_openfile(lua_State* L) {
 
 // mpq:create(filename, filesize, flags)
 int moonstorm_mpq_createfile(lua_State* L) {
-  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
+  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
   ULONGLONG filetime = 0;
   DWORD filesize = luaL_checkint(L, 3);
@@ -74,7 +76,7 @@ int moonstorm_mpq_createfile(lua_State* L) {
   DWORD flags = luaL_checkint(L, 4);
   HANDLE file_handle;
 
-  if (SFileCreateFile(*h, filename, filetime, filesize, locale, flags, &file_handle)) {
+  if (SFileCreateFile(h->handle, filename, filetime, filesize, locale, flags, &file_handle)) {
     moonstorm_newfilehandle(L, file_handle);
     return 1;
   } else {
@@ -84,8 +86,8 @@ int moonstorm_mpq_createfile(lua_State* L) {
 
 // mpq:flush()
 int moonstorm_mpq_flush(lua_State* L) {
-  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
-  if (SFileFlushArchive(*h)) {
+  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+  if (SFileFlushArchive(h->handle)) {
     lua_pushboolean(L, true);
     return 1;
   } else {
@@ -95,8 +97,9 @@ int moonstorm_mpq_flush(lua_State* L) {
 
 // mpq:close()
 int moonstorm_mpq_close(lua_State* L) {
-  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
-  if (SFileCloseArchive(*h)) {
+  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+  if (SFileCloseArchive(h->handle)) {
+    h->status = msh_closed;
     lua_pushboolean(L, true);
     return 1;
   } else {
@@ -106,9 +109,9 @@ int moonstorm_mpq_close(lua_State* L) {
 
 // mpq:hasfile(filename)
 int moonstorm_mpq_hasfile(lua_State* L) {
-  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
+  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
-  if (SFileHasFile(*h, filename)) {
+  if (SFileHasFile(h->handle, filename)) {
     lua_pushboolean(L, true);
   } else if (GetLastError() == ERROR_FILE_NOT_FOUND) {
     lua_pushboolean(L, false);
@@ -120,9 +123,9 @@ int moonstorm_mpq_hasfile(lua_State* L) {
 
 // mpq:setmaxfilecount(n)
 int moonstorm_mpq_setmaxfilecount(lua_State* L) {
-  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
+  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
   DWORD maxfilecount = luaL_checkint(L, 2);
-  if (SFileSetMaxFileCount(*h, maxfilecount)) {
+  if (SFileSetMaxFileCount(h->handle, maxfilecount)) {
     lua_pushboolean(L, true);
     return 1;
   } else {
@@ -151,7 +154,7 @@ static void WINAPI moonstorm_mpq_compact_cb(void* userdata, DWORD worktype,
 
 // mpq:compact([listfile] [, callback])
 int moonstorm_mpq_compact(lua_State* L) {
-  HANDLE* h = moonstorm_checkmpqhandle(L, 1);
+  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
   const char* listfile = NULL;
   int func = 0;
 
@@ -168,10 +171,10 @@ int moonstorm_mpq_compact(lua_State* L) {
   if (func > 0) {
     // func is already on top of the stack so we'll just take it from there in
     // the callback
-    SFileSetCompactCallback(*h, moonstorm_mpq_compact_cb, L);
+    SFileSetCompactCallback(h->handle, moonstorm_mpq_compact_cb, L);
   }
 
-  if (SFileCompactArchive(*h, listfile, false)) {
+  if (SFileCompactArchive(h->handle, listfile, false)) {
     lua_pushboolean(L, true);
     return 1;
   } else {

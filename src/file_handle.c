@@ -18,19 +18,21 @@
 #include <lauxlib.h>
 #include "file_handle.h"
 #include "common.h"
+#include "msio.h"
 
 // name of the file handle (obtained through an MPQ file) metatable
 static const char* FILEHANDLE_UDNAME = "mpqfilehandle";
 
 void moonstorm_newfilehandle(lua_State* L, HANDLE h) {
-  HANDLE* udhandle = lua_newuserdata(L, sizeof(HANDLE));
-  *udhandle = h;
+  ms_newhandle(L, h);
   luaL_setmetatable(L, FILEHANDLE_UDNAME);
 }
 
-// ensures that the value on top of the stack is a file handle userdata
-HANDLE* moonstorm_checkfilehandle(lua_State* L, int arg) {
-  return luaL_checkudata(L, arg, FILEHANDLE_UDNAME);
+ms_handle* moonstorm_checkfilehandle(lua_State* L, int arg) {
+  // ensure proper metatable
+  luaL_checkudata(L, arg, FILEHANDLE_UDNAME);
+  // ensure handle is valid
+  return ms_checkhandle(L, arg);
 }
 
 // helper function that calls moonstorm_mpq_file_size on a handle that isn't
@@ -50,10 +52,10 @@ int moonstorm_mpq_file_size_at(lua_State* L, int handle) {
 
 // file:size()
 int moonstorm_mpq_file_size(lua_State* L) {
-  HANDLE* h = moonstorm_checkfilehandle(L, 1);
+  ms_handle* h = moonstorm_checkfilehandle(L, 1);
   DWORD high, low;
 
-  low = SFileGetFileSize(*h, &high);
+  low = SFileGetFileSize(h->handle, &high);
   if (low != SFILE_INVALID_SIZE) {
     lua_pushinteger(L, make_long_lua_int(high, low));
     return 1;
@@ -64,7 +66,7 @@ int moonstorm_mpq_file_size(lua_State* L) {
 
 // file:seek([whence [, offset]])
 int moonstorm_mpq_file_seek(lua_State* L) {
-  HANDLE* h = moonstorm_checkfilehandle(L, 1);
+  ms_handle* h = moonstorm_checkfilehandle(L, 1);
   const char* whence = luaL_optstring(L, 2, "cur");
   lua_Integer offset = luaL_optinteger(L, 3, 0);
 
@@ -81,7 +83,7 @@ int moonstorm_mpq_file_seek(lua_State* L) {
     method = FILE_END;
   }
 
-  low = SFileSetFilePointer(*h, low, (LONG*)&high, method);
+  low = SFileSetFilePointer(h->handle, low, (LONG*)&high, method);
   if (low != SFILE_INVALID_SIZE) {
     lua_pushinteger(L, make_long_lua_int(high, low));
     return 1;
@@ -92,10 +94,10 @@ int moonstorm_mpq_file_seek(lua_State* L) {
 
 // file:name()
 int moonstorm_mpq_file_name(lua_State* L) {
-  HANDLE* h = moonstorm_checkfilehandle(L, 1);
+  ms_handle* h = moonstorm_checkfilehandle(L, 1);
   char filename[MAX_PATH];
 
-  if (SFileGetFileName(*h, filename)) {
+  if (SFileGetFileName(h->handle, filename)) {
     lua_pushstring(L, filename);
     return 1;
   } else {
@@ -105,7 +107,7 @@ int moonstorm_mpq_file_name(lua_State* L) {
 
 // file:read([n])
 int moonstorm_mpq_file_read(lua_State* L) {
-  HANDLE* h = moonstorm_checkfilehandle(L, 1);
+  ms_handle* h = moonstorm_checkfilehandle(L, 1);
   int bufsize;
 
   if (lua_isinteger(L, 2)) {
@@ -126,7 +128,7 @@ int moonstorm_mpq_file_read(lua_State* L) {
   char* dst = luaL_buffinitsize(L, &buf, bufsize);
   DWORD nread;
   
-  if (SFileReadFile(*h, dst, bufsize, &nread, NULL)) {
+  if (SFileReadFile(h->handle, dst, bufsize, &nread, NULL)) {
     luaL_pushresultsize(&buf, nread);
     return 1;
   } else {
@@ -136,13 +138,13 @@ int moonstorm_mpq_file_read(lua_State* L) {
 
 // file:write(s)
 int moonstorm_mpq_file_write(lua_State* L) {
-  HANDLE* h = moonstorm_checkfilehandle(L, 1);
+  ms_handle* h = moonstorm_checkfilehandle(L, 1);
   const char* s = luaL_checkstring(L, 2);
   DWORD comp = luaL_optinteger(L, 3, 0);
 
   lua_Integer sz = luaL_len(L, 2);
   
-  if (SFileWriteFile(*h, s, sz, comp)) {
+  if (SFileWriteFile(h->handle, s, sz, comp)) {
     lua_pushvalue(L, 1);
     return 1;
   } else {
@@ -152,8 +154,9 @@ int moonstorm_mpq_file_write(lua_State* L) {
 
 // file:close()
 int moonstorm_mpq_file_close(lua_State* L) {
-  HANDLE* h = moonstorm_checkfilehandle(L, 1);
-  if (SFileCloseFile(*h)) {
+  ms_handle* h = moonstorm_checkfilehandle(L, 1);
+  if (SFileCloseFile(h->handle)) {
+    h->status = msh_closed;
     lua_pushboolean(L, true);
     return 1;
   } else {

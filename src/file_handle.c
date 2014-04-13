@@ -165,6 +165,10 @@ int moonstorm_mpq_file_close(lua_State* L) {
   }
 }
 
+static int ms_mpqfilehandle_gc(lua_State* L) {
+  return moonstorm_mpq_file_close(L);
+}
+
 static const struct luaL_Reg mpqfilehandle_lib[] = {
   {"size", moonstorm_mpq_file_size},
   {"seek", moonstorm_mpq_file_seek},
@@ -180,5 +184,7 @@ void moonstorm_init_filehandle(lua_State* L) {
   lua_newtable(L);
   luaL_setfuncs(L, mpqfilehandle_lib, 0);
   lua_setfield(L, -2, "__index");
+  lua_pushcfunction(L, ms_mpqfilehandle_gc);
+  lua_setfield(L, -2, "__gc");
   lua_pop(L, 1);
 }

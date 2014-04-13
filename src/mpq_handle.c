@@ -184,6 +184,10 @@ int moonstorm_mpq_compact(lua_State* L) {
   }
 }
 
+static int ms_mpqhandle_gc(lua_State* L) {
+  return moonstorm_mpq_close(L);
+}
+
 static const struct luaL_Reg mpqhandle_lib[] = {
   {"addlistfile", moonstorm_mpq_addlistfile},
   {"openfile", moonstorm_mpq_openfile},
@@ -202,5 +206,7 @@ void moonstorm_init_mpqhandle(lua_State* L) {
   lua_newtable(L);
   luaL_setfuncs(L, mpqhandle_lib, 0);
   lua_setfield(L, -2, "__index");
+  lua_pushcfunction(L, ms_mpqhandle_gc);
+  lua_setfield(L, -2, "__gc");
   lua_pop(L, 1);
 }

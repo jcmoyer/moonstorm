@@ -23,9 +23,10 @@
 // name of the file handle (obtained through an MPQ file) metatable
 static const char* FILEHANDLE_UDNAME = "mpqfilehandle";
 
-void moonstorm_newfilehandle(lua_State* L, HANDLE h) {
-  ms_newhandle(L, h);
+ms_handle* moonstorm_newfilehandle(lua_State* L, HANDLE h) {
+  ms_handle* f = ms_newhandle(L, h);
   luaL_setmetatable(L, FILEHANDLE_UDNAME);
+  return f;
 }
 
 ms_handle* moonstorm_checkfilehandle(lua_State* L, int arg) {

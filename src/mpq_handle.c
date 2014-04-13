@@ -59,7 +59,8 @@ int moonstorm_mpq_openfile(lua_State* L) {
   HANDLE file_handle;
 
   if (SFileOpenFileEx(h->handle, filename, search_scope, &file_handle)) {
-    moonstorm_newfilehandle(L, file_handle);
+    ms_handle* f = moonstorm_newfilehandle(L, file_handle);
+    f->parent = h;
     return 1;
   } else {
     return moonstorm_push_last_err(L);
@@ -77,7 +78,8 @@ int moonstorm_mpq_createfile(lua_State* L) {
   HANDLE file_handle;
 
   if (SFileCreateFile(h->handle, filename, filetime, filesize, locale, flags, &file_handle)) {
-    moonstorm_newfilehandle(L, file_handle);
+    ms_handle* f = moonstorm_newfilehandle(L, file_handle);
+    f->parent = h;
     return 1;
   } else {
     return moonstorm_push_last_err(L);

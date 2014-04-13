@@ -17,8 +17,9 @@
 
 #include <StormLib.h>
 #include <lua.h>
+#include "msio.h"
 
-void moonstorm_newfilehandle(lua_State* L, HANDLE h);
+ms_handle* moonstorm_newfilehandle(lua_State* L, HANDLE h);
 int moonstorm_mpq_file_size(lua_State* L);
 int moonstorm_mpq_file_name(lua_State* L);
 int moonstorm_mpq_file_read(lua_State* L);

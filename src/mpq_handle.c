@@ -184,6 +184,26 @@ int moonstorm_mpq_compact(lua_State* L) {
   }
 }
 
+// mpq:addpatch(filename, prefix)
+int ms_mpq_addpatch(lua_State* L) {
+  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+  const char* filename = luaL_checkstring(L, 2);
+  const char* prefix = luaL_checkstring(L, 3);
+  if (SFileOpenPatchArchive(h->handle, filename, prefix, 0)) {
+    lua_pushboolean(L, true);
+    return 1;
+  } else {
+    return moonstorm_push_last_err(L);
+  }
+}
+
+// mpq:ispatched()
+int ms_mpq_ispatched(lua_State* L) {
+  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+  lua_pushboolean(L, SFileIsPatchedArchive(h->handle));
+  return 1;
+}
+
 static int ms_mpqhandle_gc(lua_State* L) {
   return moonstorm_mpq_close(L);
 }
@@ -197,6 +217,8 @@ static const struct luaL_Reg mpqhandle_lib[] = {
   {"hasfile", moonstorm_mpq_hasfile},
   {"setmaxfilecount", moonstorm_mpq_setmaxfilecount},
   {"compact", moonstorm_mpq_compact},
+  {"addpatch", ms_mpq_addpatch},
+  {"ispatched", ms_mpq_ispatched},
   {NULL, NULL}
 };
 

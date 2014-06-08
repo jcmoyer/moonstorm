@@ -18,15 +18,15 @@
 #include <StormLib.h>
 #include <lua.h>
 
-void moonstorm_newmpqhandle(lua_State* L, HANDLE h);
-HANDLE* moonstorm_checkmpqhandle(lua_State* L, int arg);
+void ms_newmpqhandle(lua_State* L, HANDLE h);
+HANDLE* ms_checkmpqhandle(lua_State* L, int arg);
 
-int moonstorm_mpq_open(lua_State* L);
-int moonstorm_mpq_create(lua_State* L);
-int moonstorm_mpq_flush(lua_State* L);
-int moonstorm_mpq_close(lua_State* L);
-int moonstorm_mpq_hasfile(lua_State* L);
+int ms_mpq_open(lua_State* L);
+int ms_mpq_create(lua_State* L);
+int ms_mpq_flush(lua_State* L);
+int ms_mpq_close(lua_State* L);
+int ms_mpq_hasfile(lua_State* L);
 
-void moonstorm_init_mpqhandle(lua_State* L);
+void ms_init_mpqhandle(lua_State* L);
 
 #endif

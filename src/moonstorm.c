@@ -21,21 +21,21 @@
 #include "common.h"
 
 // moonstorm.open(filename, [flags=0])
-int moonstorm_open(lua_State* L) {
+int ms_open(lua_State* L) {
   const char* filename = luaL_checkstring(L, 1);
   DWORD flags = luaL_optint(L, 2, 0);
   HANDLE mpq_handle;
 
   if (SFileOpenArchive(filename, 0, flags, &mpq_handle)) {
-    moonstorm_newmpqhandle(L, mpq_handle);
+    ms_newmpqhandle(L, mpq_handle);
     return 1;
   } else {
-    return moonstorm_push_last_err(L);
+    return ms_push_last_err(L);
   }
 }
 
 // moonstorm.create(filename, [flags=0,] max_file_count)
-int moonstorm_create(lua_State* L) {
+int ms_create(lua_State* L) {
   const char* filename = luaL_checkstring(L, 1);
   DWORD flags, max_file_count;
   HANDLE mpq_handle;
@@ -48,42 +48,42 @@ int moonstorm_create(lua_State* L) {
   }
 
   if (SFileCreateArchive(filename, flags, max_file_count, &mpq_handle)) {
-    moonstorm_newmpqhandle(L, mpq_handle);
+    ms_newmpqhandle(L, mpq_handle);
     return 1;
   } else {
-    return moonstorm_push_last_err(L);
+    return ms_push_last_err(L);
   }
 }
 
 // moonstorm.setlocale(lcid)
-int moonstorm_setlocale(lua_State* L) {
+int ms_setlocale(lua_State* L) {
   LCID lcid = luaL_checkinteger(L, 1);
   lua_pushinteger(L, SFileSetLocale(lcid));
   return 1;
 }
 
 // moonstorm.getlocale()
-int moonstorm_getlocale(lua_State* L) {
+int ms_getlocale(lua_State* L) {
   LCID lcid = SFileGetLocale();
   lua_pushinteger(L, lcid);
   return 1;
 }
 
-static const struct luaL_Reg moonstorm_lib[] = {
-  {"open", moonstorm_open},
-  {"create", moonstorm_create},
-  {"setlocale", moonstorm_setlocale},
-  {"getlocale", moonstorm_getlocale},
+static const struct luaL_Reg ms_lib[] = {
+  {"open", ms_open},
+  {"create", ms_create},
+  {"setlocale", ms_setlocale},
+  {"getlocale", ms_getlocale},
   {NULL, NULL}
 };
 
 // C linkage required for lua to see this function
 int luaopen_moonstorm(lua_State* L) {
-  moonstorm_init_mpqhandle(L);
-  moonstorm_init_filehandle(L);
+  ms_init_mpqhandle(L);
+  ms_init_filehandle(L);
 
   lua_newtable(L);
-  luaL_setfuncs(L, moonstorm_lib, 0);
+  luaL_setfuncs(L, ms_lib, 0);
 
   return 1;
 }

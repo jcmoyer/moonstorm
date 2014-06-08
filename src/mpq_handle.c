@@ -24,25 +24,25 @@
 static const char* MPQHANDLE_UDNAME = "mpqhandle";
 
 // converts a HANDLE to an mpqhandle userdata and pushes it onto the stack
-void moonstorm_newmpqhandle(lua_State* L, HANDLE h) {
+void ms_newmpqhandle(lua_State* L, HANDLE h) {
   ms_newhandle(L, h);
   luaL_setmetatable(L, MPQHANDLE_UDNAME);
 }
 
 // tests whether or not the given userdata has the proper metatable
-bool moonstorm_ismpqhandle(lua_State* L, int index) {
+bool ms_ismpqhandle(lua_State* L, int index) {
   return luaL_testudata(L, index, MPQHANDLE_UDNAME) != NULL;
 }
 
-ms_handle* moonstorm_tompqhandle(lua_State* L, int index) {
-  if (moonstorm_ismpqhandle(L, index)) {
+ms_handle* ms_tompqhandle(lua_State* L, int index) {
+  if (ms_ismpqhandle(L, index)) {
     return lua_touserdata(L, index);
   } else {
     return NULL;
   }
 }
 
-ms_handle* moonstorm_checkmpqhandle(lua_State* L, int arg) {
+ms_handle* ms_checkmpqhandle(lua_State* L, int arg) {
   // ensure proper metatable
   luaL_checkudata(L, arg, MPQHANDLE_UDNAME);
   // ensure handle is valid
@@ -50,8 +50,8 @@ ms_handle* moonstorm_checkmpqhandle(lua_State* L, int arg) {
 }
 
 // mpq:addlistfile(filename)
-int moonstorm_mpq_addlistfile(lua_State* L) {
-  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+int ms_mpq_addlistfile(lua_State* L) {
+  ms_handle* h = ms_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
   int result = SFileAddListFile(h->handle, filename);
   if (result == ERROR_SUCCESS) {
@@ -65,24 +65,24 @@ int moonstorm_mpq_addlistfile(lua_State* L) {
 }
 
 // mpq:openfile(filename [, search_scope=0])
-int moonstorm_mpq_openfile(lua_State* L) {
-  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+int ms_mpq_openfile(lua_State* L) {
+  ms_handle* h = ms_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
   DWORD search_scope = luaL_optint(L, 3, 0);
   HANDLE file_handle;
 
   if (SFileOpenFileEx(h->handle, filename, search_scope, &file_handle)) {
-    ms_handle* f = moonstorm_newfilehandle(L, file_handle);
+    ms_handle* f = ms_newfilehandle(L, file_handle);
     f->parent = h;
     return 1;
   } else {
-    return moonstorm_push_last_err(L);
+    return ms_push_last_err(L);
   }
 }
 
 // mpq:create(filename, filesize, flags)
-int moonstorm_mpq_createfile(lua_State* L) {
-  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+int ms_mpq_createfile(lua_State* L) {
+  ms_handle* h = ms_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
   ULONGLONG filetime = 0;
   DWORD filesize = luaL_checkint(L, 3);
@@ -91,65 +91,65 @@ int moonstorm_mpq_createfile(lua_State* L) {
   HANDLE file_handle;
 
   if (SFileCreateFile(h->handle, filename, filetime, filesize, locale, flags, &file_handle)) {
-    ms_handle* f = moonstorm_newfilehandle(L, file_handle);
+    ms_handle* f = ms_newfilehandle(L, file_handle);
     f->parent = h;
     return 1;
   } else {
-    return moonstorm_push_last_err(L);
+    return ms_push_last_err(L);
   }
 }
 
 // mpq:flush()
-int moonstorm_mpq_flush(lua_State* L) {
-  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+int ms_mpq_flush(lua_State* L) {
+  ms_handle* h = ms_checkmpqhandle(L, 1);
   if (SFileFlushArchive(h->handle)) {
     lua_pushboolean(L, true);
     return 1;
   } else {
-    return moonstorm_push_last_err(L);
+    return ms_push_last_err(L);
   }
 }
 
 // mpq:close()
-int moonstorm_mpq_close(lua_State* L) {
-  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+int ms_mpq_close(lua_State* L) {
+  ms_handle* h = ms_checkmpqhandle(L, 1);
   if (SFileCloseArchive(h->handle)) {
     h->status = msh_closed;
     lua_pushboolean(L, true);
     return 1;
   } else {
-    return moonstorm_push_last_err(L);
+    return ms_push_last_err(L);
   }
 }
 
 // mpq:hasfile(filename)
-int moonstorm_mpq_hasfile(lua_State* L) {
-  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+int ms_mpq_hasfile(lua_State* L) {
+  ms_handle* h = ms_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
   if (SFileHasFile(h->handle, filename)) {
     lua_pushboolean(L, true);
   } else if (GetLastError() == ERROR_FILE_NOT_FOUND) {
     lua_pushboolean(L, false);
   } else {
-    return moonstorm_push_last_err(L);
+    return ms_push_last_err(L);
   }
   return 1;
 }
 
 // mpq:setmaxfilecount(n)
-int moonstorm_mpq_setmaxfilecount(lua_State* L) {
-  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+int ms_mpq_setmaxfilecount(lua_State* L) {
+  ms_handle* h = ms_checkmpqhandle(L, 1);
   DWORD maxfilecount = luaL_checkint(L, 2);
   if (SFileSetMaxFileCount(h->handle, maxfilecount)) {
     lua_pushboolean(L, true);
     return 1;
   } else {
-    return moonstorm_push_last_err(L);
+    return ms_push_last_err(L);
   }
 }
 
 // docs say this takes LARGE_INTEGER* but source code says ULONGLONG
-static void WINAPI moonstorm_mpq_compact_cb(void* userdata, DWORD worktype,
+static void WINAPI ms_mpq_compact_cb(void* userdata, DWORD worktype,
   ULONGLONG processed, ULONGLONG total) {
   lua_State* L = userdata;
 
@@ -168,8 +168,8 @@ static void WINAPI moonstorm_mpq_compact_cb(void* userdata, DWORD worktype,
 }
 
 // mpq:compact([listfile] [, callback])
-int moonstorm_mpq_compact(lua_State* L) {
-  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+int ms_mpq_compact(lua_State* L) {
+  ms_handle* h = ms_checkmpqhandle(L, 1);
   const char* listfile = NULL;
   int func = 0;
 
@@ -186,61 +186,61 @@ int moonstorm_mpq_compact(lua_State* L) {
   if (func > 0) {
     // func is already on top of the stack so we'll just take it from there in
     // the callback
-    SFileSetCompactCallback(h->handle, moonstorm_mpq_compact_cb, L);
+    SFileSetCompactCallback(h->handle, ms_mpq_compact_cb, L);
   }
 
   if (SFileCompactArchive(h->handle, listfile, false)) {
     lua_pushboolean(L, true);
     return 1;
   } else {
-    return moonstorm_push_last_err(L);
+    return ms_push_last_err(L);
   }
 }
 
 // mpq:addpatch(filename, prefix)
 int ms_mpq_addpatch(lua_State* L) {
-  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+  ms_handle* h = ms_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
   const char* prefix = luaL_checkstring(L, 3);
   if (SFileOpenPatchArchive(h->handle, filename, prefix, 0)) {
     lua_pushboolean(L, true);
     return 1;
   } else {
-    return moonstorm_push_last_err(L);
+    return ms_push_last_err(L);
   }
 }
 
 // mpq:ispatched()
 int ms_mpq_ispatched(lua_State* L) {
-  ms_handle* h = moonstorm_checkmpqhandle(L, 1);
+  ms_handle* h = ms_checkmpqhandle(L, 1);
   lua_pushboolean(L, SFileIsPatchedArchive(h->handle));
   return 1;
 }
 
 static int ms_mpqhandle_gc(lua_State* L) {
-  ms_handle* handle = moonstorm_tompqhandle(L, 1);
+  ms_handle* handle = ms_tompqhandle(L, 1);
   if (ms_isopen(handle)) {
-    return moonstorm_mpq_close(L);
+    return ms_mpq_close(L);
   } else {
     return 0;
   }
 }
 
 static const struct luaL_Reg mpqhandle_lib[] = {
-  {"addlistfile", moonstorm_mpq_addlistfile},
-  {"openfile", moonstorm_mpq_openfile},
-  {"createfile", moonstorm_mpq_createfile},
-  {"flush", moonstorm_mpq_flush},
-  {"close", moonstorm_mpq_close},
-  {"hasfile", moonstorm_mpq_hasfile},
-  {"setmaxfilecount", moonstorm_mpq_setmaxfilecount},
-  {"compact", moonstorm_mpq_compact},
+  {"addlistfile", ms_mpq_addlistfile},
+  {"openfile", ms_mpq_openfile},
+  {"createfile", ms_mpq_createfile},
+  {"flush", ms_mpq_flush},
+  {"close", ms_mpq_close},
+  {"hasfile", ms_mpq_hasfile},
+  {"setmaxfilecount", ms_mpq_setmaxfilecount},
+  {"compact", ms_mpq_compact},
   {"addpatch", ms_mpq_addpatch},
   {"ispatched", ms_mpq_ispatched},
   {NULL, NULL}
 };
 
-void moonstorm_init_mpqhandle(lua_State* L) {
+void ms_init_mpqhandle(lua_State* L) {
   // set up mt for mpqhandles
   luaL_newmetatable(L, MPQHANDLE_UDNAME);
   lua_newtable(L);

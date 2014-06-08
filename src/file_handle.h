@@ -19,12 +19,12 @@
 #include <lua.h>
 #include "msio.h"
 
-ms_handle* moonstorm_newfilehandle(lua_State* L, HANDLE h);
-int moonstorm_mpq_file_size(lua_State* L);
-int moonstorm_mpq_file_name(lua_State* L);
-int moonstorm_mpq_file_read(lua_State* L);
-int moonstorm_mpq_file_write(lua_State* L);
-int moonstorm_mpq_file_close(lua_State* L);
-void moonstorm_init_filehandle(lua_State* L);
+ms_handle* ms_newfilehandle(lua_State* L, HANDLE h);
+int ms_mpq_file_size(lua_State* L);
+int ms_mpq_file_name(lua_State* L);
+int ms_mpq_file_read(lua_State* L);
+int ms_mpq_file_write(lua_State* L);
+int ms_mpq_file_close(lua_State* L);
+void ms_init_filehandle(lua_State* L);
 
 #endif

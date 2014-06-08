@@ -78,16 +78,16 @@ const char* storm_errstr(DWORD e, char* buffer, DWORD size) {
 #endif
 }
 
-void moonstorm_push_errstr(lua_State* L, DWORD e) {
+void ms_push_errstr(lua_State* L, DWORD e) {
   char buffer[1024];
   storm_errstr(e, buffer, sizeof(buffer));
   lua_pushstring(L, buffer);
 }
 
-int moonstorm_push_last_err(lua_State* L) {
+int ms_push_last_err(lua_State* L) {
   DWORD e = GetLastError();
   lua_pushnil(L);
-  moonstorm_push_errstr(L, e);
+  ms_push_errstr(L, e);
   lua_pushinteger(L, e);
   return 3;
 }

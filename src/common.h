@@ -28,7 +28,7 @@ static inline void extract_long_lua_int(lua_Integer i, DWORD* high, DWORD* low) 
 }
 
 const char* storm_errstr(DWORD e, char* buffer, DWORD size);
-void moonstorm_push_errstr(lua_State* L, DWORD e);
-int moonstorm_push_last_err(lua_State* L);
+void ms_push_errstr(lua_State* L, DWORD e);
+int ms_push_last_err(lua_State* L);
 
 #endif

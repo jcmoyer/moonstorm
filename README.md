@@ -11,7 +11,7 @@ local moonstorm = require('moonstorm')
 
 -- open a Warcraft III map and print its script to stdout
 local map = moonstorm.open('mymap.w3x')
-local f = map.openfile('war3map.j')
+local f = map:openfile('war3map.j')
 print(f:read())
 
 -- cleanup

@@ -32,6 +32,9 @@ typedef struct ms_handle {
 // converts a HANDLE to an ms_handle and pushes it onto the stack as a full
 // userdata
 ms_handle* ms_newhandle(lua_State* L, HANDLE handle);
+ms_handle* ms_tohandle(lua_State* L, int arg);
 ms_handle* ms_checkhandle(lua_State* L, int arg);
+
+bool ms_isopen(ms_handle* handle);
 
 #endif

@@ -29,6 +29,18 @@ ms_handle* moonstorm_newfilehandle(lua_State* L, HANDLE h) {
   return f;
 }
 
+bool moonstorm_isfilehandle(lua_State* L, int index) {
+  return luaL_testudata(L, index, FILEHANDLE_UDNAME) != NULL;
+}
+
+ms_handle* moonstorm_tofilehandle(lua_State* L, int index) {
+  if (moonstorm_isfilehandle(L, index)) {
+    return lua_touserdata(L, index);
+  } else {
+    return NULL;
+  }
+}
+
 ms_handle* moonstorm_checkfilehandle(lua_State* L, int arg) {
   // ensure proper metatable
   luaL_checkudata(L, arg, FILEHANDLE_UDNAME);
@@ -166,7 +178,12 @@ int moonstorm_mpq_file_close(lua_State* L) {
 }
 
 static int ms_mpqfilehandle_gc(lua_State* L) {
-  return moonstorm_mpq_file_close(L);
+  ms_handle* handle = moonstorm_tofilehandle(L, 1);
+  if (ms_isopen(handle)) {
+    return moonstorm_mpq_file_close(L);
+  } else {
+    return 0;
+  }
 }
 
 static const struct luaL_Reg mpqfilehandle_lib[] = {

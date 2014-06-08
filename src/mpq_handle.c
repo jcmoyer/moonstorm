@@ -29,6 +29,19 @@ void moonstorm_newmpqhandle(lua_State* L, HANDLE h) {
   luaL_setmetatable(L, MPQHANDLE_UDNAME);
 }
 
+// tests whether or not the given userdata has the proper metatable
+bool moonstorm_ismpqhandle(lua_State* L, int index) {
+  return luaL_testudata(L, index, MPQHANDLE_UDNAME) != NULL;
+}
+
+ms_handle* moonstorm_tompqhandle(lua_State* L, int index) {
+  if (moonstorm_ismpqhandle(L, index)) {
+    return lua_touserdata(L, index);
+  } else {
+    return NULL;
+  }
+}
+
 ms_handle* moonstorm_checkmpqhandle(lua_State* L, int arg) {
   // ensure proper metatable
   luaL_checkudata(L, arg, MPQHANDLE_UDNAME);
@@ -205,7 +218,12 @@ int ms_mpq_ispatched(lua_State* L) {
 }
 
 static int ms_mpqhandle_gc(lua_State* L) {
-  return moonstorm_mpq_close(L);
+  ms_handle* handle = moonstorm_tompqhandle(L, 1);
+  if (ms_isopen(handle)) {
+    return moonstorm_mpq_close(L);
+  } else {
+    return 0;
+  }
 }
 
 static const struct luaL_Reg mpqhandle_lib[] = {

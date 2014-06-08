@@ -23,14 +23,23 @@ ms_handle* ms_newhandle(lua_State* L, HANDLE handle) {
   return wrapper;
 }
 
+ms_handle* ms_tohandle(lua_State* L, int arg) {
+  return lua_touserdata(L, arg);
+}
+
 ms_handle* ms_checkhandle(lua_State* L, int arg) {
-  ms_handle* h = lua_touserdata(L, arg);
-  ms_handle* which = h;
-  while (which != NULL) {
-    if (which->status != msh_open) {
-      luaL_error(L, "attempt to use a closed handle or parent");
-    }
-    which = which->parent;
+  ms_handle* h = ms_tohandle(L, arg);
+  if (!ms_isopen(h)) {
+    luaL_error(L, "attempt to use a closed handle or parent");
   }
   return h;
+}
+
+bool ms_isopen(ms_handle* handle) {
+  for (ms_handle* current = handle; current != NULL; current = current->parent) {
+    if (current->status != msh_open) {
+      return false;
+    }
+  }
+  return true;
 }

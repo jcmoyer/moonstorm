@@ -18,7 +18,7 @@
 ms_handle* ms_newhandle(lua_State* L, HANDLE handle) {
   ms_handle* wrapper = lua_newuserdata(L, sizeof(ms_handle));
   wrapper->handle = handle;
-  wrapper->status = msh_open;
+  wrapper->status = MSH_OPEN;
   wrapper->parent = NULL;
   return wrapper;
 }
@@ -37,7 +37,7 @@ ms_handle* ms_checkhandle(lua_State* L, int arg) {
 
 bool ms_isopen(ms_handle* handle) {
   for (ms_handle* current = handle; current != NULL; current = current->parent) {
-    if (current->status != msh_open) {
+    if (current->status != MSH_OPEN) {
       return false;
     }
   }

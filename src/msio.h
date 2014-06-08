@@ -19,8 +19,8 @@
 #include <lua.h>
 
 typedef enum {
-  msh_open,
-  msh_closed
+  MSH_OPEN,
+  MSH_CLOSED
 } ms_handle_stat;
 
 typedef struct ms_handle {

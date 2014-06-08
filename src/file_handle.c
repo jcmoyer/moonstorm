@@ -169,7 +169,7 @@ int ms_mpq_file_write(lua_State* L) {
 int ms_mpq_file_close(lua_State* L) {
   ms_handle* h = ms_checkfilehandle(L, 1);
   if (SFileCloseFile(h->handle)) {
-    h->status = msh_closed;
+    h->status = MSH_CLOSED;
     lua_pushboolean(L, true);
     return 1;
   } else {

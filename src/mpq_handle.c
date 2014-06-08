@@ -114,7 +114,7 @@ int ms_mpq_flush(lua_State* L) {
 int ms_mpq_close(lua_State* L) {
   ms_handle* h = ms_checkmpqhandle(L, 1);
   if (SFileCloseArchive(h->handle)) {
-    h->status = msh_closed;
+    h->status = MSH_CLOSED;
     lua_pushboolean(L, true);
     return 1;
   } else {

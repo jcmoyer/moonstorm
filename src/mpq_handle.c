@@ -22,6 +22,7 @@
 
 // name of the mpqhandle metatable
 static const char* MPQHANDLE_UDNAME = "mpqhandle";
+static const char* FILEITERATOR_UDNAME = "fileiterator";
 
 // converts a HANDLE to an mpqhandle userdata and pushes it onto the stack
 void ms_newmpqhandle(lua_State* L, HANDLE h) {
@@ -219,12 +220,30 @@ int ms_mpq_ispatched(lua_State* L) {
 
 // mpq:files([mask, [listfile]])
 typedef struct {
-  HANDLE          find_handle;
+  ms_handle       find_handle;
   SFILE_FIND_DATA find_data;
   bool            has_first;
 } ms_mpq_file_iterator;
 
-int ms_mpq_push_find_data_table(lua_State* L, SFILE_FIND_DATA* find_data) {
+int ms_newfileiterator(lua_State* L) {
+  ms_mpq_file_iterator* it = lua_newuserdata(L, sizeof(ms_mpq_file_iterator));
+  luaL_setmetatable(L, FILEITERATOR_UDNAME);
+  it->has_first = false;
+  return 1;
+}
+
+int ms_closefileiterator(lua_State* L) {
+  ms_mpq_file_iterator* it = luaL_checkudata(L, -1, FILEITERATOR_UDNAME);
+  if (SFileFindClose(it->find_handle.handle)) {
+    it->find_handle.status = MSH_CLOSED;
+    lua_pushboolean(L, true);
+    return 1;
+  } else {
+    return ms_push_last_err(L);
+  }
+}
+
+int ms_pushfinddata(lua_State* L, SFILE_FIND_DATA* find_data) {
   lua_newtable(L);
   lua_pushstring(L, "filename");
   lua_pushstring(L, find_data->cFileName);
@@ -256,8 +275,8 @@ int ms_mpq_push_find_data_table(lua_State* L, SFILE_FIND_DATA* find_data) {
   return 1;
 }
 
-int ms_mpq_file_do_iter(lua_State* L) {
-  ms_handle* h = lua_touserdata(L, lua_upvalueindex(1));
+int ms_iteratefiles(lua_State* L) {
+  ms_handle* mpq = ms_checkhandle(L, lua_upvalueindex(1));
   const char* mask = luaL_checkstring(L, lua_upvalueindex(2));
   const char* listfile = NULL;
   if (lua_isstring(L, lua_upvalueindex(3))) {
@@ -266,19 +285,23 @@ int ms_mpq_file_do_iter(lua_State* L) {
   ms_mpq_file_iterator* it = lua_touserdata(L, lua_upvalueindex(4));
 
   if (it->has_first) {
-    if (SFileFindNextFile(it->find_handle, &it->find_data)) {
-      return ms_mpq_push_find_data_table(L, &it->find_data);
+    if (SFileFindNextFile(it->find_handle.handle, &it->find_data)) {
+      return ms_pushfinddata(L, &it->find_data);
     } else {
-      SFileFindClose(it->find_handle);
+      SFileFindClose(it->find_handle.handle);
+      it->find_handle.status = MSH_CLOSED;
       return ms_push_last_err(L);
     }
   } else {
-    it->find_handle = SFileFindFirstFile(h->handle, mask, &it->find_data, listfile);
-    if (!it->find_handle) {
+    HANDLE h = SFileFindFirstFile(mpq->handle, mask, &it->find_data, listfile);
+    if (!h) {
       return ms_push_last_err(L);
     }
+    it->find_handle.handle = h;
+    it->find_handle.status = MSH_OPEN;
+    it->find_handle.parent = mpq;
     it->has_first = true;
-    return ms_mpq_push_find_data_table(L, &it->find_data);
+    return ms_pushfinddata(L, &it->find_data);
   }
 }
 
@@ -296,11 +319,22 @@ int ms_mpq_files(lua_State* L) {
   if (!lua_isstring(L, 3)) {
     lua_pushnil(L);
   }
-  // TODO: do we need __gc for this?
-  ms_mpq_file_iterator* it = lua_newuserdata(L, sizeof(ms_mpq_file_iterator));
-  it->has_first = false;
-  lua_pushcclosure(L, ms_mpq_file_do_iter, 4);
+  ms_newfileiterator(L);
+  lua_pushcclosure(L, ms_iteratefiles, 4);
   return 1;
+}
+
+static int ms_fileiterator_gc(lua_State* L) {
+  ms_mpq_file_iterator* it = lua_touserdata(L, 1);
+  if (!it->has_first) {
+    // nothing to do; handle was never obtained from StormLib
+    return 0;
+  }
+  if (ms_isopen(&it->find_handle)) {
+    return ms_closefileiterator(L);
+  } else {
+    return 0;
+  }
 }
 
 static int ms_mpqhandle_gc(lua_State* L) {
@@ -328,6 +362,11 @@ static const struct luaL_Reg mpqhandle_lib[] = {
 };
 
 void ms_init_mpqhandle(lua_State* L) {
+  // set up mt for file iterator
+  luaL_newmetatable(L, FILEITERATOR_UDNAME);
+  lua_pushcfunction(L, ms_fileiterator_gc);
+  lua_setfield(L, -2, "__gc");
+  lua_pop(L, 1);
   // set up mt for mpqhandles
   luaL_newmetatable(L, MPQHANDLE_UDNAME);
   lua_newtable(L);

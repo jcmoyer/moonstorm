@@ -217,6 +217,92 @@ int ms_mpq_ispatched(lua_State* L) {
   return 1;
 }
 
+// mpq:files([mask, [listfile]])
+typedef struct {
+  HANDLE          find_handle;
+  SFILE_FIND_DATA find_data;
+  bool            has_first;
+} ms_mpq_file_iterator;
+
+int ms_mpq_push_find_data_table(lua_State* L, SFILE_FIND_DATA* find_data) {
+  lua_newtable(L);
+  lua_pushstring(L, "filename");
+  lua_pushstring(L, find_data->cFileName);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "plainname");
+  lua_pushstring(L, find_data->szPlainName);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "hashindex");
+  lua_pushinteger(L, find_data->dwHashIndex);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "blockindex");
+  lua_pushinteger(L, find_data->dwBlockIndex);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "filesize");
+  lua_pushinteger(L, find_data->dwFileSize);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "fileflags");
+  lua_pushinteger(L, find_data->dwFileFlags);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "compsize");
+  lua_pushinteger(L, find_data->dwCompSize);
+  lua_rawset(L, -3);
+  lua_pushstring(L, "filetime");
+  lua_pushinteger(L, make_long_lua_int(find_data->dwFileTimeHi, find_data->dwFileTimeLo));
+  lua_rawset(L, -3);
+  lua_pushstring(L, "locale");
+  lua_pushinteger(L, find_data->lcLocale);
+  lua_rawset(L, -3);
+  return 1;
+}
+
+int ms_mpq_file_do_iter(lua_State* L) {
+  ms_handle* h = lua_touserdata(L, lua_upvalueindex(1));
+  const char* mask = luaL_checkstring(L, lua_upvalueindex(2));
+  const char* listfile = NULL;
+  if (lua_isstring(L, lua_upvalueindex(3))) {
+    listfile = lua_tostring(L, lua_upvalueindex(3));
+  }
+  ms_mpq_file_iterator* it = lua_touserdata(L, lua_upvalueindex(4));
+
+  if (it->has_first) {
+    if (SFileFindNextFile(it->find_handle, &it->find_data)) {
+      return ms_mpq_push_find_data_table(L, &it->find_data);
+    } else {
+      SFileFindClose(it->find_handle);
+      return ms_push_last_err(L);
+    }
+  } else {
+    it->find_handle = SFileFindFirstFile(h->handle, mask, &it->find_data, listfile);
+    if (!it->find_handle) {
+      return ms_push_last_err(L);
+    }
+    it->has_first = true;
+    return ms_mpq_push_find_data_table(L, &it->find_data);
+  }
+}
+
+int ms_mpq_files(lua_State* L) {
+  // check for mpq handle
+  ms_checkmpqhandle(L, 1);
+  // check for mask, defaulting to "*"
+  if (lua_isnoneornil(L, 2)) {
+    lua_pushstring(L, "*");
+  } else {
+    luaL_checkstring(L, 2);
+  }
+  // optional listfile; explicitly fill with nil for the correct stack size if
+  // absent - we need 4 upvalues for the C closure, so this is important
+  if (!lua_isstring(L, 3)) {
+    lua_pushnil(L);
+  }
+  // TODO: do we need __gc for this?
+  ms_mpq_file_iterator* it = lua_newuserdata(L, sizeof(ms_mpq_file_iterator));
+  it->has_first = false;
+  lua_pushcclosure(L, ms_mpq_file_do_iter, 4);
+  return 1;
+}
+
 static int ms_mpqhandle_gc(lua_State* L) {
   ms_handle* handle = ms_tompqhandle(L, 1);
   if (ms_isopen(handle)) {
@@ -237,6 +323,7 @@ static const struct luaL_Reg mpqhandle_lib[] = {
   {"compact", ms_mpq_compact},
   {"addpatch", ms_mpq_addpatch},
   {"ispatched", ms_mpq_ispatched},
+  {"files", ms_mpq_files},
   {NULL, NULL}
 };
 

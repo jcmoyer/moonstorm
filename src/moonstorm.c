@@ -23,7 +23,7 @@
 // moonstorm.open(filename, [flags=0])
 int ms_open(lua_State* L) {
   const char* filename = luaL_checkstring(L, 1);
-  DWORD flags = luaL_optint(L, 2, 0);
+  DWORD flags = luaL_optinteger(L, 2, 0);
   HANDLE mpq_handle;
 
   if (SFileOpenArchive(filename, 0, flags, &mpq_handle)) {
@@ -41,10 +41,10 @@ int ms_create(lua_State* L) {
   HANDLE mpq_handle;
 
   if (lua_gettop(L) <= 2) {
-    max_file_count = luaL_checkint(L, 2);
+    max_file_count = luaL_checkinteger(L, 2);
   } else {
-    flags = luaL_checkint(L, 2);
-    max_file_count = luaL_checkint(L, 3);
+    flags = luaL_checkinteger(L, 2);
+    max_file_count = luaL_checkinteger(L, 3);
   }
 
   if (SFileCreateArchive(filename, flags, max_file_count, &mpq_handle)) {

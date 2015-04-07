@@ -68,7 +68,7 @@ int ms_mpq_addlistfile(lua_State* L) {
 int ms_mpq_openfile(lua_State* L) {
   ms_handle* h = ms_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
-  DWORD search_scope = luaL_optint(L, 3, 0);
+  DWORD search_scope = luaL_optinteger(L, 3, 0);
   HANDLE file_handle;
 
   if (SFileOpenFileEx(h->handle, filename, search_scope, &file_handle)) {
@@ -85,9 +85,9 @@ int ms_mpq_createfile(lua_State* L) {
   ms_handle* h = ms_checkmpqhandle(L, 1);
   const char* filename = luaL_checkstring(L, 2);
   ULONGLONG filetime = 0;
-  DWORD filesize = luaL_checkint(L, 3);
+  DWORD filesize = luaL_checkinteger(L, 3);
   LCID locale = 0;
-  DWORD flags = luaL_checkint(L, 4);
+  DWORD flags = luaL_checkinteger(L, 4);
   HANDLE file_handle;
 
   if (SFileCreateFile(h->handle, filename, filetime, filesize, locale, flags, &file_handle)) {
@@ -139,7 +139,7 @@ int ms_mpq_hasfile(lua_State* L) {
 // mpq:setmaxfilecount(n)
 int ms_mpq_setmaxfilecount(lua_State* L) {
   ms_handle* h = ms_checkmpqhandle(L, 1);
-  DWORD maxfilecount = luaL_checkint(L, 2);
+  DWORD maxfilecount = luaL_checkinteger(L, 2);
   if (SFileSetMaxFileCount(h->handle, maxfilecount)) {
     lua_pushboolean(L, true);
     return 1;

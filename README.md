@@ -1,6 +1,6 @@
 # moonstorm
 ## Overview
-[Lua **5.3**](http://www.lua.org/work/) bindings for [StormLib](https://github.com/stormlib/StormLib), a library for reading and writing MPQ files. Currently under development and by no means stable. You have been warned!
+[Lua **5.3**](http://www.lua.org/versions.html#5.3) bindings for [StormLib](https://github.com/stormlib/StormLib), a library for reading and writing MPQ files. Currently under development and by no means stable. You have been warned!
 
 Lua 5.3 is required for 64-bit integer support and bitwise operators.
 
